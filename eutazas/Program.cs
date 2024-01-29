@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
+using System.Runtime.CompilerServices;
 
 namespace eutazas
 {
@@ -75,7 +77,44 @@ namespace eutazas
 
 			Megállónként(lista);
 
+			var nekik_irunk = lista.Where(x => x.tipus !="JGY" &&
+				napokszama(x.datum_felszallas.Year, x.datum_felszallas.Month, x.datum_felszallas.Day,x.datum_berlet.Year,x.datum_berlet.Month,x.datum_berlet.Day) <= 3 
+			&& 0 <= napokszama(x.datum_felszallas.Year, x.datum_felszallas.Month, x.datum_felszallas.Day, x.datum_berlet.Year, x.datum_berlet.Month, x.datum_berlet.Day));
+
+			using (StreamWriter w = new StreamWriter("figyelmeztetes.txt"))
+			{
+				foreach (var item in nekik_irunk)
+				{
+					w.WriteLine($"{item.id} {item.datum_berlet.ToString("yyyy-MM-dd")}");
+				}
+			}
         }
+
+
+		/*
+		Függvény napokszama(e1:egész, h1:egész, n1: egész, e2:egész,h2: egész, n2: egész): egész
+			h1 = (h1 + 9) MOD 12
+			e1 = e1 - h1 DIV 10
+			d1 = 365*e1 + e1 DIV 4 - e1 DIV 100 + e1 DIV 400 + (h1*306 + 5) DIV 10 + n1 - 1
+			h2 = (h2 + 9) MOD 12
+			e2 = e2 - h2 DIV 10
+			d2 = 365*e2 + e2 DIV 4 - e2 DIV 100 + e2 DIV 400 + (h2*306 + 5) DIV 10 + n2 - 1
+			napokszama:= d2-d1
+		Függvény vége
+		*/
+
+		static int napokszama(int e1, int h1, int n1, int e2, int h2, int n2)
+		{
+			h1 = (h1 + 9) % 12;
+			e1 = e1 - h1 / 10;
+			int d1 = 365 * e1 + e1 / 4 - e1 / 100 + e1 / 400 + (h1 * 306 + 5) / 10 + n1 - 1;
+			h2 = (h2 + 9) % 12;
+			e2 = e2 - h2 / 10;
+			int d2 = 365 * e2 + e2 / 4 - e2 / 100 + e2 / 400 + (h2 * 306 + 5) / 10 + n2 - 1;
+			return d2 - d1;
+		}
+
+
 
 		private static void Megállónként(List<Adat> lista)
 		{
@@ -123,9 +162,17 @@ namespace eutazas
 
             Console.WriteLine($"A {bestmo} megállóhelyen szálltak fel a legtöbben, mégpedig ennyien: {szotar[bestmo]} fő");
 
+			int kedvezmenyes = lista.Count(x => (x.tipus == "TAB" || x.tipus == "NYB") && x.datum_felszallas <= x.datum_berlet);
+			int ingyenes = lista.Count(x => (x.tipus == "NYP" || x.tipus == "RVS" || x.tipus == "GYK") && x.datum_felszallas <= x.datum_berlet);
+
+            Console.WriteLine($"Ingyenesen és kedvezményesen így utaznak: {ingyenes} fő és {kedvezmenyes} fő");
+
+
 
         }
 	}
 }
+
+
 
 
